@@ -32,6 +32,7 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
+        updatePolicy(state, action, reward)
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
@@ -61,5 +62,8 @@ def is_green_light():
 def updateState(self, t):
     # TODO: update current state
 
+def updatePolicy(state, action, reward):
+    # TODO: Learn policy based on state, action, reward
+    
 if __name__ == '__main__':
     run()
