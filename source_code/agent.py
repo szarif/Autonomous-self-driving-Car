@@ -22,7 +22,8 @@ class LearningAgent(Agent):
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
 
-        # TODO: Update state
+        # TODO: update current state
+        self.updateState(self, t)
         
         # TODO: Select action according to your policy
         action = None
@@ -56,6 +57,9 @@ def is_green_light():
         return False
     else:
         return True
+
+def updateState(self, t):
+    # TODO: update current state
 
 if __name__ == '__main__':
     run()
