@@ -49,16 +49,6 @@ def run():
     sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
     sim.run(n_trials=10)  # press Esc or close pygame window to quit
 
-def is_green_light():
-    """Detects green or red light at intersection"""
-    e = Environment()
-    a = e.create_agent(LearningAgent)
-    e.set_primary_agent(a, enforce_deadline=False)
-    if self.break_is_enabled():
-        return False
-    else:
-        return True
-
 def updateState(self, t):
     # TODO: update current state
 
