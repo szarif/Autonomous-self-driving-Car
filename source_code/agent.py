@@ -32,9 +32,16 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-        updatePolicy(state, action, reward)
+        self.updatePolicy(state, action, reward)
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+
+    def updateState(self, t):
+    # TODO: update current state
+    
+
+    def updatePolicy(state, action, reward):
+    # TODO: Learn policy based on state, action, reward
 
 
 def run():
@@ -49,11 +56,6 @@ def run():
     sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
     sim.run(n_trials=10)  # press Esc or close pygame window to quit
 
-def updateState(self, t):
-    # TODO: update current state
-
-def updatePolicy(state, action, reward):
-    # TODO: Learn policy based on state, action, reward
     
 if __name__ == '__main__':
     run()
