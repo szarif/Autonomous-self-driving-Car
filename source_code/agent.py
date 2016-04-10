@@ -49,7 +49,7 @@ class LearningAgent(Agent):
         self.updateState(t)
 
         # TODO: Select action according to your policy
-        action = None
+        action = random.choice(Environment.valid_actions[1:])
 
         # Execute action and get reward
         reward = self.env.act(self, action)

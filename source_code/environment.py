@@ -51,11 +51,7 @@ class Environment(object):
         self.roads = []
         for x in range(self.bounds[0], self.bounds[2] + 1):
             for y in range(self.bounds[1], self.bounds[3] + 1):
-                t = TrafficLight()
-                t.reset()
-                location = Location(x,y)
-
-                self.intersections[ (x,y) ] = t  # a traffic light at each intersection
+                self.intersections[ (x,y) ] = TrafficLight()  # a traffic light at each intersection
 
 
         for a in self.intersections:
@@ -151,12 +147,9 @@ class Environment(object):
         print (self.intersections[location].state) if(location in self.intersections) else print ("error")
 
 
-        if (location in self.intersections):
-            light = 'green' if (self.intersections[location].state and heading[1] != 0) or ((not self.intersections[location].state) and heading[0] != 0) else 'red'
-        else:
-            #this is wrong check it later
-            light = 'green'
-            print ("error")
+
+        light = 'green' if (self.intersections[location].state and heading[1] != 0) or ((not self.intersections[location].state) and heading[0] != 0) else 'red'
+
         # Populate oncoming, left, right
         oncoming = None
         left = None
@@ -188,12 +181,9 @@ class Environment(object):
         location = state['location']
         heading = state['heading']
 
-        if (location in self.intersections):
-            light = 'green' if (self.intersections[location].state and heading[1] != 0) or ((not self.intersections[location].state) and heading[0] != 0) else 'red'
-        else:
-            #this is wrong check it later
-            light = 'green'
-            print ("error")
+
+        light = 'green' if (self.intersections[location].state and heading[1] != 0) or ((not self.intersections[location].state) and heading[0] != 0) else 'red'
+
         # Move agent if within bounds and obeys traffic rules
         reward = 0  # reward/penalty
         move_okay = True
