@@ -35,6 +35,10 @@ class LearningAgent(Agent):
         self.state = None
         self.next_waypoint = None
 
+        # for testing
+        self.totalReward = 0;
+        self.totalActions = 1;
+        self.averageList = []
 
 
     def get_next_waypoint(self):
@@ -44,28 +48,16 @@ class LearningAgent(Agent):
         return self.state
 
     def reset(self, destination=None):
+        self.averageList.append(self.totalReward/self.totalActions)
+        print(self.totalReward/self.totalActions);
         self.planner.route_to(destination)
+        self.totalReward = 0;
+        self.totalActions = 1;
         # TODO: Prepare for a new trip; reset any variables here, if required
 
     def update(self, t):
-        # Gather inputs
+       # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
-        inputs = self.env.sense(self)
-        deadline = self.env.get_deadline(self)
-
-        # # TODO: update current state
-        # self.updateState(t)
-        #
-        # # TODO: Select action according to your policy
-        # action = random.choice(Environment.valid_actions[1:])
-        #
-        # # Execute action and get reward
-        # reward = self.env.act(self, action)
-        #
-        # state = None;
-        #
-        # # TODO: Learn policy based on state, action, reward
-        # self.updatePolicy(state, action, reward)
 
         self.doAction()
 
@@ -110,14 +102,18 @@ class LearningAgent(Agent):
         return self.qValues[(state,action)]
 
     def doAction(self):
+        self.totalActions += 1;
         state = self.getState()
 
         action = self.chooseAction(state)
+
+        self.next_waypoint = action
 
         currentQValue = self.getQValueForStateActionPair(state, action)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        self.totalReward += reward;
 
         nextState = self.getState()
 
@@ -155,7 +151,14 @@ class LearningAgent(Agent):
         if right is None:
             right = "none"
 
-        state = light + oncoming + left + right
+        next = self.next_waypoint
+        if self.next_waypoint is None:
+            next = "none"
+
+        state = light + oncoming + left + right + next
+
+        self.state = state
+
         return state
 
     def updateQValueForStateActionPair(self, state, action, reward, currentQValue, maxNextStateActionQValue):
@@ -168,6 +171,10 @@ class LearningAgent(Agent):
         updatedQValue = (currentQValue + alpha * (reward + (gamma * maxNextStateActionQValue) - currentQValue))
 
         self.qValues[(state, action)] = updatedQValue
+        print("q value: " )
+        print(self.qValues[(state, action)])
+        print("------")
+
 
 
 def run():
@@ -176,11 +183,11 @@ def run():
     # Set up environment and agent
     e = Environment()  # create environment (also adds some dummy traffic)
     a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=False)  # set agent to track
+    e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=1.0)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=10)  # press Esc or close pygame window to quit
+    sim = Simulator(e, update_delay=0.01)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=100)  # press Esc or close pygame window to quit
 
 
 if __name__ == '__main__':

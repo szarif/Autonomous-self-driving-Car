@@ -108,7 +108,7 @@ class Environment(object):
 
         start_heading = random.choice(self.valid_headings)
         deadline = self.compute_dist(start, destination) * 5
-        #print "Environment.reset(): Trial set up with start = {}, destination = {}, deadline = {}".format(start, destination, deadline)
+        #print ("Environment.reset(): Trial set up with start = {}, destination = {}, deadline = {}".format(start, destination, deadline) )
 
         # Initialize agent(s)
         for agent in self.agent_states.keys():
@@ -120,7 +120,7 @@ class Environment(object):
             agent.reset(destination=(destination if agent is self.primary_agent else None))
 
     def step(self):
-        #print "Environment.step(): t = {}".format(self.t)  # [debug]
+        #print ("Environment.step(): t = {}".format(self.t)  )# [debug]
 
         # Update traffic lights
         for intersection, traffic_light in self.intersections.items():
@@ -134,7 +134,7 @@ class Environment(object):
         if self.primary_agent is not None:
             if self.enforce_deadline and self.agent_states[self.primary_agent]['deadline'] <= 0:
                 self.done = True
-                #print "Environment.reset(): Primary agent could not reach destination within deadline!"
+                print("Environment.reset(): Primary agent could not reach destination within deadline!")
             self.agent_states[self.primary_agent]['deadline'] -= 1
 
     def sense(self, agent):
@@ -144,7 +144,6 @@ class Environment(object):
         location = state['location']
         heading = state['heading']
 
-        print (self.intersections[location].state) if(location in self.intersections) else print ("error")
 
 
 
@@ -219,9 +218,9 @@ class Environment(object):
                 if state['deadline'] >= 0:
                     reward += 10  # bonus
                 self.done = True
-               # print "Environment.act(): Primary agent has reached destination!"  # [debug]
+                print ("Environment.act(): Primary agent has reached destination!"  )# [debug]
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
-            #print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward)  # [debug]
+            #print ("Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward) ) # [debug]
 
         return reward
 
@@ -279,5 +278,5 @@ class DummyAgent(Agent):
             action = self.next_waypoint
             self.next_waypoint = random.choice(Environment.valid_actions[1:])
         reward = self.env.act(self, action)
-        #print "DummyAgent.update(): t = {}, inputs = {}, action = {}, reward = {}".format(t, inputs, action, reward)  # [debug]
-        #print "DummyAgent.update(): next_waypoint = {}".format(self.next_waypoint)  # [debug]
+        #print( "DummyAgent.update(): t = {}, inputs = {}, action = {}, reward = {}".format(t, inputs, action, reward) )  # [debug]
+        #print( "DummyAgent.update(): next_waypoint = {}".format(self.next_waypoint)  ) # [debug]
