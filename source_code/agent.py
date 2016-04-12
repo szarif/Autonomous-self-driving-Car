@@ -1,4 +1,8 @@
 import random
+import sys
+
+from collections import OrderedDict
+
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
@@ -16,9 +20,13 @@ class Agent():
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
+    valid_actions = ['left', 'right','forward', None]
+    DEFAULT_Q_VALUE = 0
+
     def __init__(self, env):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
+        self.qValues = OrderedDict()
         self.env = env;
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
@@ -45,31 +53,121 @@ class LearningAgent(Agent):
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
 
-        # TODO: update current state
-        self.updateState(t)
+        # # TODO: update current state
+        # self.updateState(t)
+        #
+        # # TODO: Select action according to your policy
+        # action = random.choice(Environment.valid_actions[1:])
+        #
+        # # Execute action and get reward
+        # reward = self.env.act(self, action)
+        #
+        # state = None;
+        #
+        # # TODO: Learn policy based on state, action, reward
+        # self.updatePolicy(state, action, reward)
 
-        # TODO: Select action according to your policy
-        action = random.choice(Environment.valid_actions[1:])
+        self.doAction()
+
+        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+
+    def chooseAction(self, state):
+        # check current state with all possible actions and perform action with the highest qValue
+        # if current state does not have a qValue for all actions perform action at random
+        # with possiblity 1 - epsilon you might perform a random value
+
+        epsilon = .2
+
+        if random.random() > epsilon:
+            #use our past experience to choose the next action
+
+            max = -sys.maxsize - 1
+
+            nextAction =  None
+            equalActions = []
+
+            for action in self.valid_actions:
+
+                qValue = self.getQValueForStateActionPair(state, action)
+
+                if qValue > max:
+                    max = qValue
+                    equalActions = [action]
+                elif qValue == max:
+                    #equal chance of choosing one action
+                    equalActions.append(action)
+
+                nextAction = random.choice(equalActions)
+        else:
+            nextAction = random.choice(self.valid_actions)
+
+        return nextAction
+
+    def getQValueForStateActionPair(self, state, action):
+        if (state,action) not in self.qValues :
+                    self.qValues[(state,action)] = self.DEFAULT_Q_VALUE
+
+        return self.qValues[(state,action)]
+
+    def doAction(self):
+        state = self.getState()
+
+        action = self.chooseAction(state)
+
+        currentQValue = self.getQValueForStateActionPair(state, action)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
 
-        state = None;
+        nextState = self.getState()
 
-        # TODO: Learn policy based on state, action, reward
-        self.updatePolicy(state, action, reward)
+        maxNextStateActionQValue = self.getStateActionMaxQValue(nextState)
 
-        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        self.updateQValueForStateActionPair(state, action, reward , currentQValue, maxNextStateActionQValue)
 
-    def updateState(self, t):
-        # TODO: update current state
-        pass
+    def getStateActionMaxQValue(self, state):
+        max = self.DEFAULT_Q_VALUE
+
+        for action in self.valid_actions:
+
+                qValue = self.getQValueForStateActionPair(state, action)
+
+                if qValue > max:
+                    max = qValue
+
+        return max
 
 
-    def updatePolicy(self, state, action, reward):
-        # TODO: Learn policy based on state, action, reward
-        pass
+    def getState(self):
+        inputs = self.env.sense(self)
 
+        light = inputs['light']
+
+        oncoming = inputs['oncoming']
+        if oncoming is None:
+            oncoming = "none"
+
+        left = inputs['left']
+        if left is None:
+            left = "none"
+
+        right = inputs['right']
+        if right is None:
+            right = "none"
+
+        state = light + oncoming + left + right
+        return state
+
+    def updateQValueForStateActionPair(self, state, action, reward, currentQValue, maxNextStateActionQValue):
+        # alpha is the learning rate
+        alpha = .2
+
+        # gamma
+        gamma = .2
+
+        updatedQValue = (currentQValue + alpha * (reward + (gamma * maxNextStateActionQValue) - currentQValue))
+
+        self.qValues[(state, action)] = updatedQValue
 
 
 def run():
