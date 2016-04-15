@@ -14,9 +14,6 @@ class Agent():
         self.state = None
         self.next_waypoint = None
 
-
-
-
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
 
@@ -27,6 +24,11 @@ class LearningAgent(Agent):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
         self.qValues = OrderedDict()
+        # maps states to epsilon values
+        self.eValues = OrderedDict()
+        # maps states to number of times the Q-values have been updated for that state
+        self.cValues = OrderedDict()
+
         self.env = env;
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
@@ -40,10 +42,10 @@ class LearningAgent(Agent):
         self.totalActions = 1;
         self.averageList = []
 
-        self.initializeQValues()
+        self.initializeValues()
 
 
-    def initializeQValues(self):
+    def initializeValues(self):
         lights = ["green", "red"]
         oncomingStates = ["forward", "right", "left", "none"]
         leftStates = ["forward", "right", "left", "none"]
@@ -57,6 +59,8 @@ class LearningAgent(Agent):
                     for rightState in rightStates:
                         for waypoint in waypoints:
                             state = light + oncomingState + leftState + rightState + waypoint
+                            self.eValues[(state)] = 1;
+                            self.cValues[(state)] = 0;
                             for action in actions:
                                 self.qValues[(state, action)] = 0
 
@@ -87,9 +91,9 @@ class LearningAgent(Agent):
         # if current state does not have a qValue for all actions perform action at random
         # with possiblity 1 - epsilon you might perform a random value
 
-        epsilon = .2
+        epsilon = self.eValues[(state)]
 
-        if random.random() > epsilon:
+        if random.randint(1,10) > (10 * epsilon):
             #use our past experience to choose the next action
 
             maxValue = -sys.maxsize - 1
@@ -190,6 +194,8 @@ class LearningAgent(Agent):
         updatedQValue = (currentQValue + alpha * (reward + (gamma * maxNextStateActionQValue) - currentQValue))
 
         self.qValues[(state, action)] = updatedQValue
+        self.cValues[(state)] = self.cValues[(state)] + 1
+        self.eValues[(state)] = self.eValues[(state)] / (self.cValues[(state)] + 1)
         # print("q value: " )
         # print(self.qValues[(state, action)])
         # print("------")
