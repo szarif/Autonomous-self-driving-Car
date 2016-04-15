@@ -40,6 +40,25 @@ class LearningAgent(Agent):
         self.totalActions = 1;
         self.averageList = []
 
+        self.initializeQValues()
+
+
+    def initializeQValues(self):
+        lights = ["green", "red"]
+        oncomingStates = ["forward", "right", "left", "none"]
+        leftStates = ["forward", "right", "left", "none"]
+        rightStates = ["forward", "right", "left", "none"]
+        waypoints = ["forward", "right", "left", "none"]
+        actions = ["forward", "right", "left", None]
+
+        for light in lights:
+            for oncomingState in oncomingStates:
+                for leftState in leftStates:
+                    for rightState in rightStates:
+                        for waypoint in waypoints:
+                            state = light + oncomingState + leftState + rightState + waypoint
+                            for action in actions:
+                                self.qValues[(state, action)] = 0
 
     def get_next_waypoint(self):
         return self.next_waypoint
@@ -49,7 +68,7 @@ class LearningAgent(Agent):
 
     def reset(self, destination=None):
         self.averageList.append(self.totalReward/self.totalActions)
-        print(self.totalReward/self.totalActions);
+        # print(self.totalReward/self.totalActions);
         self.planner.route_to(destination)
         self.totalReward = 0;
         self.totalActions = 1;
@@ -73,7 +92,7 @@ class LearningAgent(Agent):
         if random.random() > epsilon:
             #use our past experience to choose the next action
 
-            max = -sys.maxsize - 1
+            maxValue = -sys.maxsize - 1
 
             nextAction =  None
             equalActions = []
@@ -82,22 +101,22 @@ class LearningAgent(Agent):
 
                 qValue = self.getQValueForStateActionPair(state, action)
 
-                if qValue > max:
-                    max = qValue
+                if qValue > maxValue:
+                    maxValue = qValue
                     equalActions = [action]
-                elif qValue == max:
+                elif qValue == maxValue:
                     #equal chance of choosing one action
                     equalActions.append(action)
 
-                nextAction = random.choice(equalActions)
+            nextAction = random.choice(equalActions)
         else:
             nextAction = random.choice(self.valid_actions)
 
         return nextAction
 
     def getQValueForStateActionPair(self, state, action):
-        if (state,action) not in self.qValues :
-                    self.qValues[(state,action)] = self.DEFAULT_Q_VALUE
+        # if (state,action) not in self.qValues :
+        #             self.qValues[(state,action)] = self.DEFAULT_Q_VALUE
 
         return self.qValues[(state,action)]
 
@@ -107,7 +126,7 @@ class LearningAgent(Agent):
 
         action = self.chooseAction(state)
 
-        self.next_waypoint = action
+        #self.next_waypoint = action
 
         currentQValue = self.getQValueForStateActionPair(state, action)
 
@@ -122,16 +141,16 @@ class LearningAgent(Agent):
         self.updateQValueForStateActionPair(state, action, reward , currentQValue, maxNextStateActionQValue)
 
     def getStateActionMaxQValue(self, state):
-        max = self.DEFAULT_Q_VALUE
+        maxValue = self.DEFAULT_Q_VALUE
 
         for action in self.valid_actions:
 
                 qValue = self.getQValueForStateActionPair(state, action)
 
-                if qValue > max:
-                    max = qValue
+                if qValue > maxValue:
+                    maxValue = qValue
 
-        return max
+        return maxValue
 
 
     def getState(self):
@@ -151,11 +170,11 @@ class LearningAgent(Agent):
         if right is None:
             right = "none"
 
-        next = self.next_waypoint
+        nextwaypoint = self.next_waypoint
         if self.next_waypoint is None:
-            next = "none"
+            nextwaypoint = "none"
 
-        state = light + oncoming + left + right + next
+        state = light + oncoming + left + right + nextwaypoint
 
         self.state = state
 
@@ -171,9 +190,9 @@ class LearningAgent(Agent):
         updatedQValue = (currentQValue + alpha * (reward + (gamma * maxNextStateActionQValue) - currentQValue))
 
         self.qValues[(state, action)] = updatedQValue
-        print("q value: " )
-        print(self.qValues[(state, action)])
-        print("------")
+        # print("q value: " )
+        # print(self.qValues[(state, action)])
+        # print("------")
 
 
 
