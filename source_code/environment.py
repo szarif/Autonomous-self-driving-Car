@@ -2,7 +2,7 @@ import time
 import random
 from collections import OrderedDict
 from TrafficLight import TrafficLight
-from Agent import Agent
+from agent import Agent
 
 class Environment(object):
     """Environment within which all agents operate."""

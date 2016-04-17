@@ -4,10 +4,11 @@ import sys
 from collections import OrderedDict
 
 from environment import Environment
-from Agent import Agent
-from Planner import RoutePlanner
+from agent import Agent
+from planner import RoutePlanner
 from simulator import Simulator
 import matplotlib.pyplot as plt
+import numpy as np
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -18,7 +19,7 @@ class LearningAgent(Agent):
     def __init__(self, env):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
-        self.numTrials = 200;
+        self.numTrials = 100;
         self.qValues = OrderedDict()
         self.env = env;
         self.color = 'red'  # override color
@@ -33,6 +34,9 @@ class LearningAgent(Agent):
         self.totalActions = 1
         self.averageList = []
         self.SuccessfulTripsList = []
+        self.successfulTripCount = 0
+
+        self.tripCount = 1
 
         self.previousStateList = []
 
@@ -91,10 +95,18 @@ class LearningAgent(Agent):
         self.totalActions = 1;
         self.negativeRewardCount = 0;
 
-        if (self.env.successfulTrip): 
-            self.SuccessfulTripsList.append(0)
-        else:
-            self.SuccessfulTripsList.append(1)
+        if self.env.successfulTrip: 
+            #self.SuccessfulTripsList.append(1)
+            self.successfulTripCount += 1
+       # else:
+            #self.SuccessfulTripsList.append(0)
+
+        if self.tripCount % 10 == 0:
+            self.SuccessfulTripsList.append(self.successfulTripCount)
+            self.successfulTripCount = 0
+
+        self.tripCount += 1
+
 
         # TODO: Prepare for a new trip; reset any variables here, if required
 
@@ -250,10 +262,22 @@ def run():
     sim.run(n_trials=a.numTrials)  # press Esc or close pygame window to quit
     print(len(a.trialList))
     print(len(a.deterministicNegativeActionList))
-    plt.plot(a.trialList, a.SuccessfulTripsList)
-    plt.xlabel('Trial Number')
-    plt.ylabel('Unsuccessful Trip')
+    #plt.plot(a.trialList, a.SuccessfulTripsList)
+    plt.xlabel('Trial Numbers')
+    plt.ylabel('Successful Trip')
+    plt.title('Successful Trips per 10 Trials')
+    print(a.SuccessfulTripsList)
+
+    x_axis = ['1-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70', '71-80', '81-90', '91-100']
+    y_axis = a.SuccessfulTripsList
+
+    ind = np.arange(len(x_axis))
+    plt.bar(ind, y_axis)
+    plt.xticks(ind + 0.4, x_axis)
+
+    #plt.bar(a.trialList, a.SuccessfulTripsList, width=10, color="blue")
     plt.show()
+    #plot_url = py.plot(data, filename='basic-bar')
 
 if __name__ == '__main__':
     run()
