@@ -80,38 +80,47 @@ class LearningAgent(Agent):
        # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
 
-        self.doAction()
+        self.act()
 
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
-    def chooseAction(self, state):
+    def getAction(self, state):
         # check current state with all possible actions and perform action with the highest qValue
         # if current state does not have a qValue for all actions perform action at random
         # with possiblity 1 - epsilon you might perform a random value
 
-        epsilon = .2
+        epsilon = self.eValues[state];
 
-        if random.randint(1,10) > (10 * epsilon) :
-            #use our past experience to choose the next action
+        # random.randint(a, b) returns random int N such that a <= N <= b
+        # 0.2 chance of selecting random action
+        # 0.8 chance of selecting action with highest Q-value
+        if random.randint(1,10) > 10 * epsilon:
 
-            maxValue = -sys.maxsize - 1
+            # smallest negative number in Python
+            maxValue= -sys.maxsize - 1
 
+            # initalize next action
             nextAction =  None
+            # list that stores actions with equal Q Values
             equalActions = []
 
             for action in self.valid_actions:
+                # get qValue from table
+                qValue = self.qValues[(state,action)]
 
-                qValue = self.getQValueForStateActionPair(state, action)
-
+                # populate list of equal actions
                 if qValue > maxValue:
                     maxValue = qValue
+                    # erase previous equalActions list and append current action
                     equalActions = [action]
                 elif qValue == maxValue:
-                    #equal chance of choosing one action
+                    # add to list of equalActions
+                    # used later for randomly selecting from equal actions
                     equalActions.append(action)
-
+            # randomly select from list of equal actions
             nextAction = random.choice(equalActions)
         else:
+            # select any random action
             nextAction = random.choice(self.valid_actions)
 
         return nextAction
@@ -122,11 +131,11 @@ class LearningAgent(Agent):
 
         return self.qValues[(state,action)]
 
-    def doAction(self):
+    def act(self):
         self.totalActions += 1;
         state = self.getState()
 
-        action = self.chooseAction(state)
+        action = self.getAction(state)
 
         #self.next_waypoint = action
 
