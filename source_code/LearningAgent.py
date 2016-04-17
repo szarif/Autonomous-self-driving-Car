@@ -4,8 +4,8 @@ import sys
 from collections import OrderedDict
 
 from environment import Environment
-from agent import Agent
-from planner import RoutePlanner
+from Agent import Agent
+from Planner import RoutePlanner
 from simulator import Simulator
 import matplotlib.pyplot as plt
 
@@ -18,7 +18,7 @@ class LearningAgent(Agent):
     def __init__(self, env):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
-        self.numTrials = 1000;
+        self.numTrials = 200;
         self.qValues = OrderedDict()
         self.env = env;
         self.color = 'red'  # override color
@@ -111,7 +111,7 @@ class LearningAgent(Agent):
         # if current state does not have a qValue for all actions perform action at random
         # with possiblity 1 - epsilon you might perform a random value
 
-        epsilon = 0.2;
+        epsilon = 0.1
 
         # random.randint(a, b) returns random int N such that a <= N <= b
         # 0.2 chance of selecting random action
@@ -250,7 +250,7 @@ def run():
     sim.run(n_trials=a.numTrials)  # press Esc or close pygame window to quit
     print(len(a.trialList))
     print(len(a.deterministicNegativeActionList))
-    plt.plot(a.trialList, a.SuccessfulTripsList, 'ro')
+    plt.plot(a.trialList, a.SuccessfulTripsList)
     plt.xlabel('Trial Number')
     plt.ylabel('Unsuccessful Trip')
     plt.show()
