@@ -8,6 +8,7 @@ from Agent import Agent
 from Planner import RoutePlanner
 from simulator import Simulator
 import matplotlib.pyplot as plt
+import numpy as np
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -18,7 +19,7 @@ class LearningAgent(Agent):
     def __init__(self, env):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
-        self.numTrials = 200;
+        self.numTrials = 1000;
         self.qValues = OrderedDict()
         self.env = env;
         self.color = 'red'  # override color
@@ -32,8 +33,10 @@ class LearningAgent(Agent):
         self.totalReward = 0
         self.totalActions = 1
         self.averageList = []
+        self.totalDeterministicRewardList = []
         self.SuccessfulTripsList = []
 
+        self.trialCount = 0
         self.previousStateList = []
 
         # list containing the number of deterministic actions with negative rewards per trial
@@ -49,6 +52,9 @@ class LearningAgent(Agent):
         self.negativeRewardCount = 0;
 
         self.initializeQValues()
+
+        self.successfulTripsCount = 0
+        self.averageSuccessfulTrips = []
 
 
     def initializeQValues(self):
@@ -85,16 +91,24 @@ class LearningAgent(Agent):
 
 
         self.averageList.append(self.totalReward/self.totalActions)
+
+        self.totalDeterministicRewardList.append(self.totalReward/self.totalActions)
+
         # print(self.totalReward/self.totalActions);
         self.planner.route_to(destination)
         self.totalReward = 0;
         self.totalActions = 1;
         self.negativeRewardCount = 0;
 
-        if (self.env.successfulTrip): 
+        self.trialCount += 1
+
+        if (self.env.successfulTrip):
             self.SuccessfulTripsList.append(0)
+            self.successfulTripsCount += 1;
         else:
             self.SuccessfulTripsList.append(1)
+
+        self.averageSuccessfulTrips.append(self.successfulTripsCount / self.trialCount)
 
         # TODO: Prepare for a new trip; reset any variables here, if required
 
@@ -155,7 +169,7 @@ class LearningAgent(Agent):
         return self.qValues[(state,action)]
 
     def act(self):
-        self.totalActions += 1;
+
         state = self.getState()
 
         action = self.getAction(state)
@@ -168,12 +182,14 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         if self.state in self.previousStateList and not self.randomAction:
+            self.totalActions += 1;
+            self.totalReward += reward;
             if (reward < 0): 
                 self.deterministicNegativeAction += reward
         else:
             self.previousStateList.append(self.state)
 
-        self.totalReward += reward;
+
 
         nextState = self.getState()
 
@@ -248,12 +264,57 @@ def run():
     # Now simulate it
     sim = Simulator(e, update_delay=0)  # reduce update_delay to speed up simulation
     sim.run(n_trials=a.numTrials)  # press Esc or close pygame window to quit
+
+    #Testing size
     print(len(a.trialList))
-    print(len(a.deterministicNegativeActionList))
-    plt.plot(a.trialList, a.SuccessfulTripsList)
-    plt.xlabel('Trial Number')
-    plt.ylabel('Unsuccessful Trip')
+    print(len(a.averageSuccessfulTrips))
+
+    #-----------Average Reward Per Deterministic Action-----------#
+    # x = np.array (a.trialList )
+    # y = np.array (a.totalDeterministicRewardList)
+
+    # plt.xlabel("Trial Number")
+    # plt.ylabel("Average Reward Per Deterministic Action")
+
+    #-----------Average Successful Full Trips-----------#
+    x = np.array (a.trialList )
+    y = np.array (a.averageSuccessfulTrips)
+
+    plt.xlabel("Trial Number")
+    plt.ylabel("Average Successful Trips")
+
+    #creating the scatter plot
+    plt.scatter(x, y, s=30, alpha=0.15, marker='o')
+
+    #create the best fit line
+    par = np.polyfit(x, y, 1, full=True)
+
+    #graph the best fit line
+    slope=par[0][0]
+    intercept=par[0][1]
+    xl = [min(x), max(x)]
+    yl = [slope*xx + intercept  for xx in xl]
+
+
+
+
+    # error bounds
+    yerr = [abs(slope*xx + intercept - yy)  for xx,yy in zip(x,y)]
+    par = np.polyfit(x, yerr, 2, full=True)
+
+    yerrUpper = [(xx*slope+intercept)+(par[0][0]*xx**2 + par[0][1]*xx + par[0][2]) for xx,yy in zip(x,y)]
+    yerrLower = [(xx*slope+intercept)-(par[0][0]*xx**2 + par[0][1]*xx + par[0][2]) for xx,yy in zip(x,y)]
+
+    #ploting the best fit line
+    plt.plot(xl, yl, '-r')
+
+    #uncomment to plot the error bounds
+    #plt.plot(x, yerrLower, '--r')
+    #plt.plot(x, yerrUpper, '--r')
+
+    #show the graph
     plt.show()
+
 
 if __name__ == '__main__':
     run()
