@@ -3,11 +3,11 @@ import sys
 
 from collections import OrderedDict
 
-from Environment import Environment
-from Agent import Agent
-from Planner import RoutePlanner
+from environment import Environment
+from agent import Agent
+from planner import RoutePlanner
 from simulator import Simulator
-
+import matplotlib.pyplot as plt
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -18,6 +18,7 @@ class LearningAgent(Agent):
     def __init__(self, env):
         super(LearningAgent).__init__()  # sets self.env = env, state = None, next_waypoint = None, and a default color
 
+        self.numTrials = 1000;
         self.qValues = OrderedDict()
         self.env = env;
         self.color = 'red'  # override color
@@ -31,6 +32,19 @@ class LearningAgent(Agent):
         self.totalReward = 0
         self.totalActions = 1
         self.averageList = []
+        self.SuccessfulTripsList = []
+
+        self.previousStateList = []
+
+        # list containing the number of deterministic actions with negative rewards per trial
+        self.deterministicNegativeActionList = []
+        self.deterministicNegativeAction = 0
+        # list holding integers 0 through 100, for plotting trials on 1 through 100 on x-axis
+        self.trialList = []
+        for i in range(0, self.numTrials):
+            self.trialList.append(i)
+
+        self.randomAction = False
 
         self.negativeRewardCount = 0;
 
@@ -61,11 +75,13 @@ class LearningAgent(Agent):
         return self.state
 
     def reset(self, destination=None):
-        print("total actions: " );
-        print(self.totalActions);
+        #print("total actions: " );
+        #print(self.totalActions);
 
-        print("total negative rewards: " );
-        print(self.negativeRewardCount);
+        #print("total negative rewards: " );
+        #print(self.negativeRewardCount);
+        self.deterministicNegativeActionList.append(self.deterministicNegativeAction)
+        self.deterministicNegativeAction = 0
 
 
         self.averageList.append(self.totalReward/self.totalActions)
@@ -74,6 +90,12 @@ class LearningAgent(Agent):
         self.totalReward = 0;
         self.totalActions = 1;
         self.negativeRewardCount = 0;
+
+        if (self.env.successfulTrip): 
+            self.SuccessfulTripsList.append(0)
+        else:
+            self.SuccessfulTripsList.append(1)
+
         # TODO: Prepare for a new trip; reset any variables here, if required
 
     def update(self, t):
@@ -89,13 +111,13 @@ class LearningAgent(Agent):
         # if current state does not have a qValue for all actions perform action at random
         # with possiblity 1 - epsilon you might perform a random value
 
-        epsilon = self.eValues[state];
+        epsilon = 0.2;
 
         # random.randint(a, b) returns random int N such that a <= N <= b
         # 0.2 chance of selecting random action
         # 0.8 chance of selecting action with highest Q-value
         if random.randint(1,10) > 10 * epsilon:
-
+            self.randomAction = False
             # smallest negative number in Python
             maxValue= -sys.maxsize - 1
 
@@ -120,6 +142,7 @@ class LearningAgent(Agent):
             # randomly select from list of equal actions
             nextAction = random.choice(equalActions)
         else:
+            self.randomAction = True
             # select any random action
             nextAction = random.choice(self.valid_actions)
 
@@ -144,7 +167,11 @@ class LearningAgent(Agent):
         # Execute action and get reward
         reward = self.env.act(self, action)
 
-        if (reward < 0): self.negativeRewardCount = self.negativeRewardCount + 1;
+        if self.state in self.previousStateList and not self.randomAction:
+            if (reward < 0): 
+                self.deterministicNegativeAction += reward
+        else:
+            self.previousStateList.append(self.state)
 
         self.totalReward += reward;
 
@@ -219,9 +246,14 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # set agent to track
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.1)  # reduce update_delay to speed up simulation
-    sim.run(n_trials=100)  # press Esc or close pygame window to quit
-
+    sim = Simulator(e, update_delay=0)  # reduce update_delay to speed up simulation
+    sim.run(n_trials=a.numTrials)  # press Esc or close pygame window to quit
+    print(len(a.trialList))
+    print(len(a.deterministicNegativeActionList))
+    plt.plot(a.trialList, a.SuccessfulTripsList, 'ro')
+    plt.xlabel('Trial Number')
+    plt.ylabel('Unsuccessful Trip')
+    plt.show()
 
 if __name__ == '__main__':
     run()

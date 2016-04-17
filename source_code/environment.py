@@ -2,8 +2,7 @@ import time
 import random
 from collections import OrderedDict
 from TrafficLight import TrafficLight
-from Agent import Agent
-
+from agent import Agent
 
 class Environment(object):
     """Environment within which all agents operate."""
@@ -17,6 +16,7 @@ class Environment(object):
         self.t = 0
         self.agent_states = OrderedDict()
         self.status_text = ""
+        self.successfulTrip = False
 
         # Road network
         self.grid_size = (8, 6)  # (cols, rows)
@@ -106,6 +106,7 @@ class Environment(object):
             if self.enforce_deadline and self.agent_states[self.primary_agent]['deadline'] <= 0:
                 self.done = True
                 print ("Environment.reset(): Primary agent could not reach destination within deadline!")
+                self.successfulTrip = False
             self.agent_states[self.primary_agent]['deadline'] -= 1
 
     def sense(self, agent):
@@ -181,6 +182,7 @@ class Environment(object):
                     reward += 10  # bonus
                 self.done = True
                 print ("Environment.act(): Primary agent has reached destination!" ) # [debug]
+                self.successfulTrip = True
             self.status_text = "state: {}\naction: {}\nreward: {}".format(agent.get_state(), action, reward)
             #print "Environment.act() [POST]: location: {}, heading: {}, action: {}, reward: {}".format(location, heading, action, reward)  # [debug]
 
